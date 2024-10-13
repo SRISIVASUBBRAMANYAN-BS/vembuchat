@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEMBU Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-100 to-blue-100 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-hidden">
+        <div class="p-6">
+            <h1 class="text-3xl font-bold text-center mb-6 text-purple-700">VEMBU Chatbot</h1>
+            <div id="chat-area" class="h-[400px] overflow-y-auto pr-4 mb-4"></div>
+            <form id="chat-form" class="mt-4">
+                <div class="flex space-x-2">
+                    <input id="user-input" type="text" placeholder="Type your message here..." class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600">
+                    <button type="submit" id="send-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Send
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+       const diseases = {
+    "fever": "Take paracetamol or ibuprofen to reduce fever and relieve discomfort. Stay hydrated by drinking plenty of fluids, such as water and herbal teas. Rest is crucial. If fever persists for more than three days or is very high, consult a doctor.",
+    
+    "headache": "For headache relief, try ibuprofen or acetaminophen. Rest in a dark, quiet room and stay hydrated. Identify and avoid potential triggers like certain foods or stress. If headaches become frequent or severe, consult a healthcare professional for further evaluation.",
+    
+    "cough": "Consider using cough syrup containing dextromethorphan or guaifenesin to alleviate symptoms. Stay hydrated by drinking warm fluids and consider using a humidifier to ease throat irritation. If the cough lasts more than a few weeks or worsens, see a doctor.",
+    
+    "sore throat": "Gargle warm salt water to soothe irritation. Over-the-counter throat lozenges or sprays can provide temporary relief. Stay hydrated with fluids, and avoid irritants like smoking. If the sore throat persists or is severe, consult a healthcare provider.",
+    
+    "nausea": "Try ginger tea or peppermint to help settle your stomach. Over-the-counter medications like meclizine can also provide relief. Stay hydrated with clear fluids. If nausea persists or is accompanied by vomiting, consult a doctor for advice.",
+    
+    "vomiting": "Stay hydrated by sipping on clear fluids like water or electrolyte solutions. Avoid solid foods until vomiting subsides. Over-the-counter antiemetics like ondansetron can help. If vomiting is severe or persistent, seek medical attention.",
+    
+    "diarrhea": "Stay hydrated with oral rehydration solutions or clear fluids. Avoid heavy, fatty foods and consider using loperamide for symptom relief. If diarrhea persists for more than 48 hours or is accompanied by severe pain or fever, consult a doctor.",
+    
+    "fatigue": "Ensure you’re getting enough sleep and hydration. A balanced diet rich in nutrients can also help. Consider vitamin supplements if needed. If fatigue persists despite lifestyle changes, consult a healthcare provider to rule out underlying conditions.",
+    
+    "muscle pain": "Consider over-the-counter pain relievers like ibuprofen or naproxen. Rest and apply heat or ice to the affected area for relief. Gentle stretching may help. If pain persists or worsens, consult a healthcare professional for further evaluation.",
+    
+    "joint pain": "Rest the affected joint and apply ice or heat as needed. Over-the-counter NSAIDs like ibuprofen can provide pain relief. Maintain a healthy weight and consider physical therapy for long-term management. Consult a doctor if pain is severe or persistent.",
+    
+    "back pain": "For relief, consider using ibuprofen or acetaminophen. Rest and apply heat or cold to the area. Gentle stretching and maintaining good posture can help. If back pain is severe or lasts more than a few weeks, consult a healthcare provider.",
+    
+    "chills": "Dress warmly and drink warm fluids to help combat chills. If chills are accompanied by fever or persistent discomfort, seek medical attention. Rest is important, and monitor your symptoms closely. Consult a doctor if you suspect an infection.",
+    
+    "rash": "Avoid scratching and keep the affected area clean. Over-the-counter antihistamines can help with itching. Moisturizers can soothe dry skin. If the rash is severe, spreading, or accompanied by other symptoms, consult a healthcare provider for proper diagnosis and treatment.",
+    
+    "shortness of breath": "Seek immediate medical attention if you experience shortness of breath, especially if it's severe. Use a rescue inhaler if you have asthma. Rest and avoid exertion until evaluated. Monitor for additional symptoms like chest pain.",
+    
+    "chest pain": "Seek emergency medical attention immediately if you experience chest pain. Chewing aspirin can help if heart-related issues are suspected. Avoid physical exertion and stay calm until help arrives. Do not ignore severe or persistent chest pain.",
+    
+    "dizziness": "Sit or lie down to prevent falls and stay hydrated. Over-the-counter motion sickness medications may help if dizziness is caused by nausea. If dizziness persists or is severe, consult a healthcare provider for further evaluation.",
+    
+    "confusion": "Seek immediate medical attention if experiencing confusion, especially if it's sudden or severe. Monitor for additional symptoms, such as headache or visual changes. This could indicate a serious underlying condition that requires prompt evaluation.",
+    
+    "sweating": "Stay hydrated and rest in a cool environment. If excessive sweating persists without explanation, consult a doctor. Monitor for other symptoms such as fever or pain, which may indicate an underlying health issue.",
+    
+    "runny nose": "Consider antihistamines like loratadine for relief. Stay hydrated and use saline nasal sprays to ease congestion. If symptoms persist for more than a week or are accompanied by fever, consult a healthcare provider.",
+    
+    "stomach ache": "Avoid heavy or greasy foods and stay hydrated. Over-the-counter antacids or simethicone may help relieve discomfort. If stomach pain persists or is severe, consult a doctor for further evaluation and treatment.",
+    
+    "itchy eyes": "Use antihistamines or artificial tears to relieve itching. Avoid rubbing your eyes and consider cool compresses. If symptoms persist or worsen, consult an eye care professional for further evaluation and treatment options.",
+    
+    "swelling": "Elevate the swollen area and apply ice to reduce swelling. Over-the-counter NSAIDs like ibuprofen can provide relief. Consult a healthcare provider if swelling doesn't subside or is accompanied by pain or redness.",
+    
+    "allergy": "Identify and avoid known allergens. Over-the-counter antihistamines like cetirizine can help relieve symptoms. Consult an allergist for testing and personalized management options if you have persistent or severe allergic reactions.",
+    
+    "insomnia": "Establish a consistent sleep schedule and a relaxing bedtime routine. Consider melatonin supplements or relaxation techniques. If insomnia persists, consult a healthcare provider for further evaluation and potential treatment options.",
+    
+    "depression": "Seek support from a mental health professional for diagnosis and treatment options. Antidepressants like SSRIs may be prescribed. Lifestyle changes, therapy, and social support can significantly improve symptoms and quality of life.",
+    
+    "anxiety": "Practice relaxation techniques such as deep breathing or mindfulness. Therapy or counseling can be beneficial. Consult a healthcare provider about medications like SSRIs for managing persistent anxiety symptoms.",
+    
+    "acne": "Use over-the-counter treatments like benzoyl peroxide or salicylic acid. Keep the skin clean and avoid heavy makeup. Consult a dermatologist for persistent or severe acne that does not respond to topical treatments.",
+    
+    "eczema": "Moisturize regularly with fragrance-free lotions. Topical corticosteroids can help control flare-ups. Avoid known triggers and consult a dermatologist for severe or persistent cases requiring prescription treatments.",
+    
+    "psoriasis": "Use topical treatments like corticosteroids or vitamin D analogs for relief. Moisturize frequently. Consult a dermatologist for systemic treatments if psoriasis is extensive or unresponsive to topical therapies.",
+    
+    "high blood pressure": "Adopt a low-sodium diet and regular exercise. Medications like lisinopril or amlodipine may be prescribed for management. Regular monitoring is essential to prevent complications. Consult a doctor for personalized guidance.",
+    
+    "high cholesterol": "Follow a heart-healthy diet low in saturated fats and cholesterol. Statins or other medications may be prescribed if lifestyle changes are insufficient. Regular monitoring and consultation with a healthcare provider are important.",
+    
+    "diabetes": "Monitor blood sugar levels regularly. Follow a balanced diet and exercise program. Medications like metformin may be prescribed to help manage blood sugar levels. Consult a healthcare provider for personalized management.",
+    
+    "asthma": "Use prescribed inhalers like albuterol during an asthma attack. Avoid triggers and maintain a written asthma action plan. Regular check-ups with a healthcare provider can help manage and adjust treatment as needed.",
+    
+    "COPD": "Consult a healthcare provider for personalized management strategies. Bronchodilators and oxygen therapy may be necessary. Quitting smoking and pulmonary rehabilitation can significantly improve quality of life.",
+    
+    "heartburn": "Avoid spicy or acidic foods and large meals. Over-the-counter antacids like omeprazole can help relieve symptoms. Consult a doctor if heartburn persists or worsens, as it may indicate GERD.",
+    
+    "gout": "Stay hydrated and consider over-the-counter NSAIDs for pain relief. Allopurinol may be prescribed to manage uric acid levels. Avoid purine-rich foods and consult a doctor for dietary advice.",
+    
+    "UTI": "Stay hydrated and consult a doctor for appropriate antibiotics. Over-the-counter pain relievers like phenazopyridine can help relieve discomfort. Cranberry supplements may assist in prevention.",
+    
+    "menstrual cramps": "Consider over-the-counter pain relievers like ibuprofen for relief. Applying heat to the lower abdomen can also help. If cramps are severe or persistent, consult a healthcare provider.",
+    
+    "sunburn": "Apply aloe vera gel or hydrocortisone cream to soothe the skin. Stay hydrated and avoid further sun exposure. Consult a doctor if blisters form or if pain worsens.",
+    
+    "toothache": "Rinse with warm salt water and use over-the-counter pain relief. Schedule an appointment with a dentist for evaluation and treatment. Avoid eating hard foods until evaluated.",
+    
+    "cold": "Rest and stay hydrated with fluids like herbal tea. Over-the-counter medications such as decongestants or antihistamines can alleviate symptoms. If symptoms worsen or persist, consult a healthcare provider."
+};
+
+        const chatArea = document.getElementById('chat-area');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        let isFirstMessage = true;
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message mb-4 p-3 rounded-lg ${isUser ? 'bg-blue-200 text-blue-800' : 'bg-green-200 text-green-800'}`;
+            messageDiv.innerHTML = `<strong>${isUser ? 'You: ' : 'VEMBU: '}</strong>${content}`;
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function checkSymptoms(userMessage) {
+            const userSymptoms = userMessage.toLowerCase().split(' ');
+            const matchedSuggestions = userSymptoms
+                .filter(symptom => diseases[symptom])
+                .map(symptom => `${symptom.charAt(0).toUpperCase() + symptom.slice(1)}: ${diseases[symptom]}`);
+
+            if (matchedSuggestions.length > 0) {
+                const suggestionsDiv = document.createElement('div');
+                suggestionsDiv.className = 'message mb-4 p-4 bg-yellow-100 rounded-lg border border-yellow-300';
+                suggestionsDiv.innerHTML = `
+                    <strong class="text-yellow-700">Suggestions based on your symptoms:</strong>
+                    <ul class="list-disc pl-5 mt-2">
+                        ${matchedSuggestions.map(suggestion => `<li class="text-yellow-800">${suggestion}</li>`).join('')}
+                    </ul>
+                    <p class="mt-2 text-red-600 font-semibold">
+                        Note: This is not a diagnosis. Please consult with a healthcare professional for proper medical advice.
+                    </p>
+                `;
+                chatArea.appendChild(suggestionsDiv);
+            }
+        }
+
+        function simulateThinking() {
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Thinking...';
+        }
+
+        function stopThinking() {
+            sendButton.disabled = false;
+            sendButton.textContent = 'Send';
+        }
+
+        function processUserMessage(userMessage) {
+            if (isFirstMessage) {
+                isFirstMessage = false;
+                return "Hello! Welcome to VEMBU AI. How can I assist you today?";
+            }
+
+            const lowerCaseMessage = userMessage.toLowerCase();
+            if (lowerCaseMessage.includes('hi') || lowerCaseMessage.includes('hello')) {
+                return "Hello! Welcome to VEMBU AI. How can I assist you?";
+            }
+
+            if (lowerCaseMessage.length < 5 || !lowerCaseMessage.match(/[a-z]/i)) {
+                return "I'm not sure I understand. Can you please provide a clearer prompt or describe your symptoms in more detail?";
+            }
+
+            checkSymptoms(userMessage);
+            return "I've analyzed your message. If you've mentioned any symptoms, please review the suggestions above. Remember to consult with a healthcare professional for a proper diagnosis and treatment plan. Is there anything else you'd like to know?";
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userMessage = userInput.value.trim();
+            if (userMessage) {
+                addMessage(userMessage, true);
+                userInput.value = '';
+                simulateThinking();
+
+                // Simulate AI processing time
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                const aiResponse = processUserMessage(userMessage);
+                addMessage(aiResponse);
+
+                stopThinking();
+            }
+        });
+
+        // Add welcome message when the page loads
+        window.addEventListener('load', () => {
+            addMessage("Welcome to VEMBU AI! How can I assist you today?");
+        });
+    </script>
+</body>
+</html>
